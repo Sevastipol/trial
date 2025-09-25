@@ -1,18 +1,14 @@
 chrome.storage.local.get(['isBlocking'], function(result) {
   const isBlocking = result.isBlocking !== false; // Default to true
   if (isBlocking) {
-    const script = document.createElement('script');
-    script.textContent = `
-      (function() {
-        const originalOpen = window.open;
-        window.open = function(url, name, features) {
-          console.log('Blocked window.open() call');
-          return null;
-        };
-      })();
-    `;
-    (document.head || document.documentElement).appendChild(script);
-    script.remove();
+    chrome.scripting.executeScript({
+      target: { tabId: chrome.runtime.getCurrentTabId() },
+      files: ['blocker.js']
+    }, () => {
+      if (chrome.runtime.lastError) {
+        console.error('Script injection failed:', chrome.runtime.lastError);
+      }
+    });
   }
 });
 
